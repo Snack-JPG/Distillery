@@ -1,20 +1,52 @@
 # Schema Search Skill
 
-This skill helps you search and understand database schemas that have been distilled into lean index files.
+This skill helps you search and understand database schemas efficiently, avoiding expensive MCP calls.
 
-## When to Use
+## When to Use This Skill
 
-Use this skill when the user asks:
+**ALWAYS check `schema-index.md` FIRST before using Supabase MCP for schema lookups.**
+
+Trigger this skill when:
+
+### User Questions
 - "What tables handle [domain]?"
 - "Where is [data] stored?"
 - "What columns are in [table]?"
 - "Find tables related to [concept]"
 - "Schema for [feature]"
+- "What's the structure of [table]?"
+
+### Before MCP Calls
+**INTERCEPT these patterns** - search schema-index.md instead:
+- About to call `list_tables` on Supabase MCP
+- About to call `execute_sql` with `information_schema` queries
+- About to query `pg_catalog` for table metadata
+- Need to verify a table exists before writing a query
+- Need to find foreign key relationships
+- Looking up column names for a table
+- Checking what tables reference another table
+
+### When Writing Queries
+- Need to reference existing table names
+- Need to know column names for SELECT/INSERT/UPDATE
+- Need to find junction tables for JOINs
+- Need to understand foreign key relationships
+- Validating table/column names before executing SQL
 
 ## How to Search
 
-1. **Check for distilled schema**: Look for `schema-index.md` in the project root or `.claude/` directory
-2. **Use Grep**: Search the index file with relevant keywords
+1. **Check for schema index**: Look for `schema-index.md` in:
+   - Project root
+   - `.claude/` directory
+   - `docs/` directory
+
+2. **Use Grep**: Search the index with relevant keywords
+   ```
+   Grep pattern="users" path="schema-index.md"
+   Grep pattern="_id" path="schema-index.md"  # Find foreign keys
+   Grep pattern="## " path="schema-index.md"  # List all domains
+   ```
+
 3. **Return matches**: Show table name, purpose, and key columns
 
 ## Schema Index Format
@@ -33,16 +65,36 @@ users | Core user accounts | id, email, role, organization_id
 user_sessions | Active login sessions | id, user_id, token, expires_at
 ```
 
-## Search Strategy
+## Search Strategies
 
-1. **By domain**: Search section headers (`## Users`, `## Projects`)
-2. **By table name**: Direct grep for table name
-3. **By column**: Search for column names to find which tables contain them
-4. **By relationship**: Search for `_id` suffixes to find foreign keys
+**By domain**: Search section headers
+```
+Grep pattern="## Users" path="schema-index.md"
+```
+
+**By table name**: Direct search
+```
+Grep pattern="project_risks" path="schema-index.md"
+```
+
+**By column**: Find tables containing a column
+```
+Grep pattern="organization_id" path="schema-index.md"
+```
+
+**By relationship**: Find foreign keys
+```
+Grep pattern="user_id" path="schema-index.md"  # Tables linked to users
+```
+
+**List all tables**: Get overview
+```
+Grep pattern="^[a-z]" path="schema-index.md"  # All table lines
+```
 
 ## Response Format
 
-When you find matches, respond with:
+When you find matches:
 
 ```
 Found in schema-index.md:
@@ -50,11 +102,24 @@ Found in schema-index.md:
 **[Domain]**
 - `table_name` - Purpose
   - Key columns: col1, col2, col3
-  - Relationships: links to other_table via foreign_key_id
+  - Links to: other_table (via foreign_key_id)
 ```
+
+## When to Fall Back to MCP
+
+Only use Supabase MCP for schema queries when:
+1. `schema-index.md` doesn't exist → tell user to run `/distillery:distill`
+2. Need real-time data (row counts, index stats)
+3. Need constraint details not in the index
+4. Schema has changed and index is stale
 
 ## If No Index Found
 
 If no `schema-index.md` exists, tell the user:
 
-"No distilled schema found. Run `/distillery:distill` to generate one from your Supabase database."
+"No schema index found. Run `/distillery:distill` to generate one - this will make schema lookups much faster and save tokens."
+
+## Priority Order
+
+1. **First**: Search `schema-index.md` (instant, ~0 tokens)
+2. **Only if needed**: Fall back to Supabase MCP (slow, ~25k tokens)
