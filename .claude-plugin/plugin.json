@@ -1,0 +1,19 @@
+{
+  "name": "distillery",
+  "description": "Distill database schemas into lean, searchable indexes. Turns 25k tokens of schema noise into grep-friendly reference files.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Austin @ GenFlow Systems",
+    "url": "https://github.com/Snack-JPG"
+  },
+  "repository": "https://github.com/Snack-JPG/Distillery",
+  "license": "MIT",
+  "keywords": [
+    "database",
+    "schema",
+    "supabase",
+    "postgres",
+    "index",
+    "search"
+  ]
+}
