@@ -6,68 +6,107 @@ description: Generate a lean, searchable schema index from your Supabase databas
 
 Generate a compact, grep-searchable schema index from the connected Supabase database.
 
-## What You'll Do
+## Step 1: Get Table List (Lightweight Query)
 
-1. **Query the schema** using Supabase MCP's `list_tables` or direct SQL:
-   ```sql
-   SELECT
-     t.table_name,
-     obj_description((t.table_schema || '.' || t.table_name)::regclass) as description,
-     string_agg(c.column_name, ', ' ORDER BY c.ordinal_position) as columns
-   FROM information_schema.tables t
-   JOIN information_schema.columns c
-     ON t.table_name = c.table_name AND t.table_schema = c.table_schema
-   WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE'
-   GROUP BY t.table_schema, t.table_name
-   ORDER BY t.table_name;
-   ```
+First, run this query to get just table names - this is tiny and fits easily:
 
-2. **Organize by domain** - Group related tables together:
-   - Users & Auth
-   - Core Business Objects
-   - Relationships/Junctions
-   - Audit/Logging
-   - AI/Analytics (if applicable)
+```sql
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+```
 
-3. **Format each table** as:
-   ```
-   table_name | Brief purpose | key_columns, foreign_keys
-   ```
+## Step 2: Batch the Tables
 
-4. **Output to** `schema-index.md` in the project root
+Split the table list into batches of **40 tables each**. For example:
+- Batch 1: tables starting A-D (or first 40 alphabetically)
+- Batch 2: tables starting E-L (or next 40)
+- etc.
 
-## Output Format
+## Step 3: Parallel Subagent Processing
+
+For each batch, spawn a **Haiku subagent** using the Task tool with `model: "haiku"`.
+
+Each subagent should:
+1. Query only its assigned tables:
+```sql
+SELECT
+  t.table_name,
+  string_agg(c.column_name, ', ' ORDER BY c.ordinal_position) as columns
+FROM information_schema.tables t
+JOIN information_schema.columns c
+  ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+WHERE t.table_schema = 'public'
+  AND t.table_type = 'BASE TABLE'
+  AND t.table_name IN ('table1', 'table2', ...) -- batch list
+GROUP BY t.table_name
+ORDER BY t.table_name;
+```
+
+2. Format each table as:
+```
+table_name | Brief purpose (infer from name/columns) | key_columns
+```
+
+3. Return the formatted output
+
+**IMPORTANT**: Run all batch subagents in parallel using multiple Task tool calls in a single message.
+
+## Step 4: Combine Results
+
+Collect outputs from all subagents and organize into domains:
 
 ```markdown
 # Schema Index
 
 Generated: [date]
 Tables: [count]
-Database: [project-ref or name]
+Database: [project name]
 
 ---
 
-## [Domain 1]
-table_name | Purpose | id, key_col, other_table_id
-another_table | Purpose | id, name, status
+## Users & Authentication
+[tables related to users, auth, sessions, roles]
 
-## [Domain 2]
-...
+## Core Business Objects
+[main entities - projects, organizations, etc.]
+
+## Relationships & Junctions
+[many-to-many tables, *_members, *_assignments]
+
+## Audit & Logging
+[activity_log, audit_*, change_history]
+
+## AI & Analytics
+[insights, embeddings, canonical_*, pulse_*]
+
+## Settings & Config
+[feature_flags, settings, templates]
 ```
 
-## Guidelines
+## Step 5: Save Output
 
-- **Be concise**: One line per table, max 100 chars
-- **Prioritize columns**: id, name/title, status, foreign keys, timestamps last
-- **Skip noise**: Don't include every column, just the searchable ones
-- **Group logically**: Users should find related tables together
+Write the combined, organized schema to `schema-index.md` in the project root.
+
+## Formatting Guidelines
+
+- **One line per table**, max 100 chars
+- **Prioritize columns**: id, name/title, status, foreign keys (skip timestamps)
 - **Note relationships**: Include `_id` columns to show foreign keys
+- **Infer purpose**: Use table/column names to write brief descriptions
+
+## Example Output Line
+
+```
+project_risks | Risk register entries | id, project_id, title, impact_score, likelihood_score, status
+```
 
 ## After Generation
 
 Tell the user:
 1. Schema index saved to `schema-index.md`
-2. Token count (should be <5k for most projects)
-3. How to search: "Use Grep to search schema-index.md for any table or column"
+2. Total tables processed
+3. Approximate token count (should be <3k for most projects)
 
 $ARGUMENTS
