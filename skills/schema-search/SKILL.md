@@ -119,6 +119,36 @@ If no `schema-index.md` exists, tell the user:
 
 "No schema index found. Run `/distillery:distill` to generate one - this will make schema lookups much faster and save tokens."
 
+## Update CLAUDE.md
+
+**After generating `schema-index.md`, add a reference to the project's CLAUDE.md file.**
+
+This ensures all future Claude sessions know about the schema index.
+
+### What to Add to CLAUDE.md
+
+Add this section to the project's CLAUDE.md (create if it doesn't exist):
+
+```markdown
+## Database Schema Reference
+
+This project has a distilled schema index at `schema-index.md`.
+
+**ALWAYS check `schema-index.md` before using Supabase MCP for schema lookups.**
+
+- Use Grep to search for tables, columns, or relationships
+- Update the index after any CREATE/ALTER/DROP operations
+- Only fall back to MCP if the index doesn't have what you need
+
+To regenerate: `/distillery:distill`
+```
+
+### When to Update CLAUDE.md
+
+- After first running `/distillery:distill`
+- If CLAUDE.md exists but doesn't mention schema-index.md
+- When setting up the plugin for a new project
+
 ## After Schema Changes
 
 **ALWAYS update `schema-index.md` after modifying the database schema.**

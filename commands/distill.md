@@ -102,11 +102,34 @@ Write the combined, organized schema to `schema-index.md` in the project root.
 project_risks | Risk register entries | id, project_id, title, impact_score, likelihood_score, status
 ```
 
+## Step 6: Update CLAUDE.md
+
+Add a reference to the schema index in the project's CLAUDE.md file.
+
+If CLAUDE.md exists, append this section (if not already present):
+
+```markdown
+## Database Schema Reference
+
+This project has a distilled schema index at `schema-index.md`.
+
+**ALWAYS check `schema-index.md` before using Supabase MCP for schema lookups.**
+
+- Use Grep to search for tables, columns, or relationships
+- Update the index after any CREATE/ALTER/DROP operations
+- Only fall back to MCP if the index doesn't have what you need
+
+To regenerate: `/distillery:distill`
+```
+
+If CLAUDE.md doesn't exist, create it with the above content.
+
 ## After Generation
 
 Tell the user:
 1. Schema index saved to `schema-index.md`
-2. Total tables processed
-3. Approximate token count (should be <3k for most projects)
+2. CLAUDE.md updated with schema reference
+3. Total tables processed
+4. Approximate token count (should be <3k for most projects)
 
 $ARGUMENTS
