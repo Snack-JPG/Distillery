@@ -119,7 +119,59 @@ If no `schema-index.md` exists, tell the user:
 
 "No schema index found. Run `/distillery:distill` to generate one - this will make schema lookups much faster and save tokens."
 
+## After Schema Changes
+
+**ALWAYS update `schema-index.md` after modifying the database schema.**
+
+Update the index when you:
+- CREATE TABLE → Add new line to appropriate domain section
+- ALTER TABLE ADD COLUMN → Update the table's column list
+- ALTER TABLE DROP COLUMN → Remove from column list
+- DROP TABLE → Remove the line
+- RENAME TABLE → Update the table name
+- Create a new migration that changes schema
+
+### How to Update
+
+1. **Find the right section** (or create one):
+   ```
+   Grep pattern="## Users" path="schema-index.md"
+   ```
+
+2. **Add/edit the table line**:
+   ```
+   table_name | Brief purpose | key_columns
+   ```
+
+3. **Use Edit tool** to update the file in place
+
+### Example: After CREATE TABLE
+
+```sql
+CREATE TABLE project_comments (
+  id uuid PRIMARY KEY,
+  project_id uuid REFERENCES projects(id),
+  user_id uuid REFERENCES users(id),
+  content text,
+  created_at timestamptz
+);
+```
+
+Add to schema-index.md under `## Projects`:
+```
+project_comments | Discussion on projects | id, project_id, user_id, content
+```
+
+### Example: After ALTER TABLE
+
+```sql
+ALTER TABLE projects ADD COLUMN archived_at timestamptz;
+```
+
+Update the projects line to include `archived_at` if it's a key column (skip if it's just a timestamp).
+
 ## Priority Order
 
 1. **First**: Search `schema-index.md` (instant, ~0 tokens)
 2. **Only if needed**: Fall back to Supabase MCP (slow, ~25k tokens)
+3. **After changes**: Update `schema-index.md` to stay in sync
