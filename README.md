@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.jpg" alt="Distillery" width="400">
+</p>
+
 # Distillery
 
 Stop burning 25k tokens every time Claude needs to check a table name.
