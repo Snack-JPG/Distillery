@@ -72,6 +72,19 @@ The skill tells Claude to update `schema-index.md` after:
 
 No need to re-run distill unless you want a full refresh.
 
+## Real World Test
+
+Ran this on PulseAI - a 543k LOC enterprise SaaS with 318 database tables:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Tables | 318 | 318 |
+| Schema lookup tokens | ~32,000 | 0 |
+| Output file | - | 490 lines |
+| Domains auto-organized | - | 40+ |
+
+The AI grouped tables into logical domains: Organizations, Projects, RAID, AI Insights, Pulse AI System, Financial, Resources, and 35 more. One line per table, grep-searchable, foreign keys visible.
+
 ## Why
 
 | Approach | Tokens | Speed |
