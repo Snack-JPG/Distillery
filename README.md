@@ -1,117 +1,80 @@
 # Distillery
 
-**Distill database schemas into lean, searchable indexes.**
-
-Turn 25,000 tokens of `list_tables` noise into a ~300 line grep-friendly reference.
+Stop burning 25k tokens every time Claude needs to check a table name.
 
 ## The Problem
 
-```
-You: "What tables handle user permissions?"
-Supabase MCP: *returns 25k tokens of every column, constraint, and index*
-Context window: *cries*
-```
+You ask Claude to write a query. Claude calls `list_tables` on Supabase MCP. Your context window screams. 25,000 tokens gone. For a table name.
 
-## The Solution
+## The Fix
+
+Distill your schema once into a ~300 line grep-friendly file. Claude searches that instead.
 
 ```
-You: "What tables handle user permissions?"
-Claude: *greps schema-index.md*
-Claude: "Found: user_roles, permissions, role_permissions - here are the key columns..."
+Before: "What tables handle risks?" → 25k token MCP call
+After:  "What tables handle risks?" → grep, 0 tokens, instant
 ```
 
-## Installation
+## Install
 
-```bash
-# Add as marketplace
+```
 /plugin marketplace add Snack-JPG/Distillery
-
-# Install the plugin
-/plugin install distillery@Snack-JPG/Distillery
+/plugin install distillery@Snack-JPG-Distillery
 ```
 
-Or add directly:
-```bash
-/plugin install Snack-JPG/Distillery
+Restart Claude Code.
+
+## Use
+
+**Generate your schema index:**
 ```
-
-## Usage
-
-### Generate Your Schema Index
-
-```bash
 /distillery:distill
 ```
 
-This will:
-1. Query your Supabase schema (requires Supabase MCP connected)
-2. Organize tables by domain
-3. Output `schema-index.md` in your project root
+This creates `schema-index.md` in your project and updates CLAUDE.md so future sessions know about it.
 
-### Search Your Schema
-
-Once generated, just ask naturally:
-
-- "What tables handle authentication?"
-- "Where is project data stored?"
-- "What columns are in the users table?"
+**Then just ask naturally:**
+- "What tables handle users?"
+- "What columns are in project_risks?"
 - "Find tables with organization_id"
 
-The `schema-search` skill will grep your index and return concise results.
+The skill intercepts MCP calls and searches your index instead.
 
-## Schema Index Format
+## What You Get
+
+A file like this:
 
 ```markdown
 # Schema Index
 
-Generated: 2026-01-15
-Tables: 42
-
----
-
-## Users & Authentication
-users | Core user accounts | id, email, role, organization_id
+## Users & Auth
+users | Core accounts | id, email, role, organization_id
 user_sessions | Active sessions | id, user_id, token_hash, expires_at
 
 ## Projects
 projects | Main entity | id, name, status, owner_id
-tasks | Work items | id, project_id, title, assignee_id
+project_risks | Risk register | id, project_id, title, impact_score
 ```
 
-**One line per table. Grep-friendly. Token-light.**
+One line per table. Grep it. Done.
 
-## Why This Works
+## It Stays Fresh
 
-| Approach | Tokens | Searchable |
-|----------|--------|------------|
-| Raw `list_tables` | ~25,000 | ❌ Noise |
-| Full schema dump | ~50,000 | ❌ Overkill |
-| **Distilled index** | ~2,000 | ✅ Grep it |
+The skill tells Claude to update `schema-index.md` after:
+- CREATE TABLE
+- ALTER TABLE
+- DROP TABLE
+- Any migration
 
-## Manual Schema Index
+No need to re-run distill unless you want a full refresh.
 
-Don't use Supabase? Create `schema-index.md` manually:
+## Why
 
-```markdown
-# Schema Index
-
-## [Domain]
-table_name | Purpose | key_col_1, key_col_2, foreign_key_id
-```
-
-The `schema-search` skill will find and use it.
-
-## Requirements
-
-- Claude Code 1.0.33+
-- Supabase MCP (for auto-generation) or manual creation
-
-## License
-
-MIT
+| Approach | Tokens | Speed |
+|----------|--------|-------|
+| Raw MCP `list_tables` | ~25,000 | Slow |
+| **Distilled index** | ~0 | Instant |
 
 ---
 
-Built by [Austin @ GenFlow Systems](https://github.com/Snack-JPG)
-
-*Bringing knowledge from hard-to-find to immediately accessible.*
+Built by [Austin](https://github.com/Snack-JPG) because context windows aren't infinite and MCP calls aren't free.
