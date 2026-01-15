@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "distillery",
-      "source": ".",
+      "source": "./",
       "description": "Distill database schemas into lean, searchable indexes. Turns 25k tokens of schema noise into grep-friendly reference files.",
       "version": "1.0.0",
       "author": {
