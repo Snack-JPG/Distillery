@@ -1,0 +1,25 @@
+{
+  "name": "distillery-marketplace",
+  "owner": {
+    "name": "Austin @ GenFlow Systems"
+  },
+  "metadata": {
+    "description": "Distill database schemas into lean, searchable indexes",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "distillery",
+      "source": ".",
+      "description": "Distill database schemas into lean, searchable indexes. Turns 25k tokens of schema noise into grep-friendly reference files.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Austin @ GenFlow Systems"
+      },
+      "category": "database",
+      "tags": ["database", "schema", "supabase", "postgres", "search"],
+      "repository": "https://github.com/Snack-JPG/Distillery",
+      "license": "MIT"
+    }
+  ]
+}
