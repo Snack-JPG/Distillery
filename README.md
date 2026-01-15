@@ -64,13 +64,34 @@ One line per table. Grep it. Done.
 
 ## It Stays Fresh
 
-The skill tells Claude to update `schema-index.md` after:
-- CREATE TABLE
-- ALTER TABLE
-- DROP TABLE
-- Any migration
+The skill tells Claude to update `schema-index.md` after schema changes. For automatic reminders, add this hook to your project's `.claude/settings.local.json`:
 
-No need to re-run distill unless you want a full refresh.
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__supabase__apply_migration",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📝 Schema changed - update schema-index.md with the table/columns you just created or modified.'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+When Claude runs a migration, it gets reminded to add the new table directly - no need to re-query all 318 tables. Just one line edit.
+
+```bash
+# Quick test after install
+grep "user" schema-index.md
+```
+
+Shows the value prop immediately.
 
 ## Real World Test
 

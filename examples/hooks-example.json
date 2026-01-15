@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__supabase__apply_migration",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📝 Schema changed - update schema-index.md with the table/columns you just created or modified. No need to re-run /distillery:distill.'"
+          }
+        ]
+      }
+    ]
+  }
+}
